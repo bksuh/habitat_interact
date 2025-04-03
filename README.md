@@ -15,6 +15,7 @@
   - [ ] Interactions: object picking, placing, and removing
   - [ ] How to record data and where it's saved
   - [ ] How to save and replay a scene setup
+  - [ ] How to random navigate and receive and follow a navigation route
 
 - [ ] **Add illustrations**
   - [ ] Add a demo video or animated GIF showing typical usage
@@ -65,7 +66,7 @@ By default, it uses the configuration file at: `config/habitat_data_collector.ya
 
 ### 🚁 ROS2 Integration (Optional)
 
-If you want to receive ROS2 topic outputs or record ROS2 bags:
+If you want to receive and send ROS2 topic outputs or record ROS2 bags:
 
 1. Make sure you have **ROS2 Humble** installed. You can follow the official installation guide:  
    👉 [Install ROS2 Humble (Ubuntu 22.04)](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html)
