@@ -1,4 +1,5 @@
 {
+    "git.detectSubmodules": false,
     "git.ignoredRepositories": [
         "**/3rdparty/habitat-sim",
         "**/3rdparty/habitat-lab"
