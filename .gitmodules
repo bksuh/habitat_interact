@@ -1,6 +1,7 @@
 [submodule "3rdparty/habitat-sim"]
 	path = 3rdparty/habitat-sim
 	url = https://github.com/facebookresearch/habitat-sim.git
+	branch = stable
 [submodule "3rdparty/habitat-lab"]
 	path = 3rdparty/habitat-lab
 	url = https://github.com/facebookresearch/habitat-lab.git
