@@ -1,0 +1,25 @@
+name: habitat_data_collector
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.10
+  - cmake
+  - pip
+  - pytorch
+  - torchvision
+  - torchaudio
+  - pytorch-cuda=12.4
+  - numpy
+  - opencv
+  - pillow
+  - matplotlib
+  - pyyaml
+  - scipy
+  - tqdm
+  - pip:
+      - hydra-core
+      - omegaconf
+      - habitat-sim @ file:///${PWD}/3rdparty/habitat-sim
+      - -e 3rdparty/habitat-lab

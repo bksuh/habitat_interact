@@ -20,7 +20,7 @@ ros_enabled = ROSDataCollector is not None
 
 @hydra.main(
     version_base=None,
-    config_path="../config/applications",
+    config_path=str(Path(__file__).parent.parent / "config"),
     config_name="habitat_data_collector.yaml"
 )
 def main(cfg: DictConfig) -> None:
