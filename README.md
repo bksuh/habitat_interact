@@ -4,7 +4,28 @@
 
 ---
 
+## 📝 TODO
+
+- [ ] **Write documentation for configuration and dataset format**
+  - [ ] Explain the structure and usage of `config/habitat_data_collector.yaml`
+  - [ ] Describe expected dataset directory structure (scene, object assets, etc.)
+
+- [ ] **Write usage guide**
+  - [ ] Basic usage and how to launch the simulator
+  - [ ] Interactions: object picking, placing, and removing
+  - [ ] How to record data and where it's saved
+  - [ ] How to save and replay a scene setup
+
+- [ ] **Add illustrations**
+  - [ ] Add a demo video or animated GIF showing typical usage
+  - [ ] Include example screenshots of the simulator running
+
+
+---
+
 ## 📦 Environment Setup
+
+> 🖥️ This setup is tested on **Ubuntu 22.04** with **Python 3.10** env.
 
 ### 1. Clone the repository with submodules
 
@@ -20,42 +41,43 @@ conda env create -f environment.yml
 conda activate habitat_data_collector
 ```
 
-### 3. Build and install habitat-sim
+### 3. Build and install Habitat Sim & Lab
+
+This step will take some time as it compiles Habitat-Sim from source.
 
 ```bash
-cd 3rdparty/habitat-sim
-
-# Build and install in editable mode with CMake policy version fix
-CMAKE_ARGS="-DCMAKE_POLICY_VERSION_MINIMUM=3.5" \
-pip install . -v --config-settings editable=true
-```
-
-### 4. Install habitat-lab
-
-```bash
-cd ../habitat-lab
-pip install -e .
-# back to root dir
-cd ../..
-```
-
-### 5. [Optional] Source the ROS2 environment (Humble)
-
-```bash
-source /opt/ros/humble/setup.bash  # or setup.zsh
+bash scripts/install_habitat.sh
 ```
 
 ---
 
 ## 🚀 Run the Collector
 
-Run the main simulation launcher in the root directory:
+Run the main simulation from the root directory:
 
 ```bash
 python -m habitat_data_collector.main
 ```
 
-By default, it uses the config file at `config/habitat_data_collector.yaml` to initialize the environment.
+By default, it uses the configuration file at: `config/habitat_data_collector.yaml`
+
+
+
+### 🚁 ROS2 Integration (Optional)
+
+If you want to receive ROS2 topic outputs or record ROS2 bags:
+
+1. Make sure you have **ROS2 Humble** installed. You can follow the official installation guide:  
+   👉 [Install ROS2 Humble (Ubuntu 22.04)](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html)
+
+2. Source the ROS2 environment **before** running the collector:
+
+```bash
+source /opt/ros/humble/setup.bash  # or source /opt/ros/humble/setup.zsh
+```
+
+Once sourced, the simulator will publish data to ROS2 topics and allow you to record them by open ros recording config in `config/habitat_data_collector.yaml`
+
 
 ---
 
