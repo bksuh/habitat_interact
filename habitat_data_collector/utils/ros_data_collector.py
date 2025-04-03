@@ -41,15 +41,15 @@ try:
 
         def publish_pose(self, pose):
             if self.ros_enabled:
-                # 创建 Odometry 消息
+                # Create Odometry message
                 odom_msg = Odometry()
                 
-                # 设置时间戳和坐标系
+                # Set timestamp and coordinate frames
                 odom_msg.header.stamp = self.get_clock().now().to_msg()
-                odom_msg.header.frame_id = 'map'          # 父坐标系（全局坐标系）
-                odom_msg.child_frame_id = ''     # 子坐标系（机器人自身）
+                odom_msg.header.frame_id = 'map'          # Parent coordinate frame (global coordinate frame)
+                odom_msg.child_frame_id = ''              # Child coordinate frame (robot itself)
 
-                # 设置位置（pose[:3]）和姿态（pose[3:7]）
+                # Set position (pose[:3]) and orientation (pose[3:7])
                 odom_msg.pose.pose.position.x = pose[0]
                 odom_msg.pose.pose.position.y = pose[1]
                 odom_msg.pose.pose.position.z = pose[2]
@@ -58,7 +58,7 @@ try:
                 odom_msg.pose.pose.orientation.z = pose[5]
                 odom_msg.pose.pose.orientation.w = pose[6]
 
-                # 设置速度信息（默认为 0）
+                # Set velocity information (default to 0)
                 odom_msg.twist.twist.linear.x = 0.0
                 odom_msg.twist.twist.linear.y = 0.0
                 odom_msg.twist.twist.linear.z = 0.0
@@ -66,25 +66,24 @@ try:
                 odom_msg.twist.twist.angular.y = 0.0
                 odom_msg.twist.twist.angular.z = 0.0
 
-                # 发布 Odometry 消息
+                # Publish Odometry message
                 self.pose_pub.publish(odom_msg)
         
         def publish_camera_info(self, fx, fy, cx, cy, width, height):
             camera_info_msg = CameraInfo()
             
-            # intrinsic
+            # Intrinsic parameters
             camera_info_msg.width = width
             camera_info_msg.height = height
-            camera_info_msg.k = [float(fx), 0.0, float(cx), 0.0, float(fy), float(cy), 0.0, 0.0, 1.0]  # 3x3 内参矩阵
-            camera_info_msg.p = [float(fx), 0.0, float(cx), 0.0, 0.0, float(fy), float(cy), 0.0, 0.0, 0.0, 1.0, 0.0]  # 投影矩阵，假设无畸变
+            camera_info_msg.k = [float(fx), 0.0, float(cx), 0.0, float(fy), float(cy), 0.0, 0.0, 1.0]  # 3x3 intrinsic matrix
+            camera_info_msg.p = [float(fx), 0.0, float(cx), 0.0, 0.0, float(fy), float(cy), 0.0, 0.0, 0.0, 1.0, 0.0]  # Projection matrix, assuming no distortion
 
-            
-            # timestamp
+            # Timestamp
             current_time = self.get_clock().now().to_msg()
             camera_info_msg.header.stamp = current_time
             camera_info_msg.header.frame_id = 'camera_frame'
 
-            # pub
+            # Publish
             self.camera_info_pub.publish(camera_info_msg)
 
     class ROSDataListener(Node):
@@ -92,13 +91,13 @@ try:
             super().__init__('listener_node')
             self.ros_enabled = ros_enabled
 
-            self.latest_path = None  # 用于存储最近接收到的路径
+            self.latest_path = None  # Used to store the most recently received path
 
             if self.ros_enabled:
                 # Subscriber for action_path
                 self.action_path_subscriber = self.create_subscription(
-                    Path,  # 修改为 nav_msgs/Path
-                    '/action_path',  # 监听的路径话题
+                    Path,  # Change to nav_msgs/Path
+                    '/action_path',  # Topic to listen to
                     self.action_path_callback,
                     10
                 )
@@ -112,18 +111,18 @@ try:
             Args:
                 msg (Path): The Path message containing the path data.
             """
-            # 将接收到的路径转换为简单列表表示 (x, y, z)
+            # Convert the received path to a simple list representation (x, y, z)
             current_path = [
                 (pose.pose.position.x, pose.pose.position.y, pose.pose.position.z) for pose in msg.poses
             ]
-            current_path = self.transform_path_to_habitat(current_path)  # 转换路径到 habitat 世界坐标系
+            current_path = self.transform_path_to_habitat(current_path)  # Transform path to Habitat world coordinates
 
-            # 如果新路径与上次路径一致，则跳过处理
+            # Skip processing if the new path is identical to the previous path
             if self.latest_path == current_path:
                 # self.get_logger().info("Received path is identical to the latest path. Skipping processing.")
                 return
 
-            # 更新最新路径
+            # Update the latest path
             self.latest_path = current_path
             self.get_logger().info(f"Received global_path with {len(current_path)} poses.")
 
@@ -143,15 +142,14 @@ try:
             pose_in_habitat = []
 
             for point in pose_from_ros:
-                # 扩展为齐次坐标
+                # Extend to homogeneous coordinates
                 pose_sys = np.eye(4)
-                pose_sys[:3, 3] = point  # 只设置位移部分
-                # 调用 get_habitat_pose 函数
+                pose_sys[:3, 3] = point  # Only set the translation part
+                # Call the get_habitat_pose function
                 transformed_pose = self.get_habitat_pose(pose_sys)
-                # 提取转换后的 3D 坐标
+                # Extract the transformed 3D coordinates
                 transformed_point = transformed_pose[:3, 3]
-                # 将 transformed_point 的第二项替换为 current_position 的第二项
-                # transformed_point[1] = current_position[1]
+                # Append the transformed point
                 pose_in_habitat.append(tuple(transformed_point))
             
             return pose_in_habitat

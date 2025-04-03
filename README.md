@@ -20,7 +20,26 @@ conda env create -f environment.yml
 conda activate habitat_data_collector
 ```
 
-### 3. Source the ROS2 environment (Humble)
+### 3. Build and install habitat-sim
+
+```bash
+cd 3rdparty/habitat-sim
+
+# Build and install in editable mode with CMake policy version fix
+CMAKE_ARGS="-DCMAKE_POLICY_VERSION_MINIMUM=3.5" \
+pip install . -v --config-settings editable=true
+```
+
+### 4. Install habitat-lab
+
+```bash
+cd ../habitat-lab
+pip install -e .
+# back to root dir
+cd ../..
+```
+
+### 5. [Optional] Source the ROS2 environment (Humble)
 
 ```bash
 source /opt/ros/humble/setup.bash  # or setup.zsh
@@ -30,7 +49,7 @@ source /opt/ros/humble/setup.bash  # or setup.zsh
 
 ## 🚀 Run the Collector
 
-Run the main simulation launcher:
+Run the main simulation launcher in the root directory:
 
 ```bash
 python -m habitat_data_collector.main
@@ -58,7 +77,9 @@ habitat-data-collector/
 ## ⚠️ Notes
 
 - ROS2 Humble must be pre-installed and sourced before running.
-- Habitat-Sim and Habitat-Lab are included as Git submodules and installed via the environment file.
+- Habitat-Sim and Habitat-Lab are included as Git submodules.
+- habitat-sim is compiled and installed using pip with editable mode.
+- habitat-lab is installed using `pip install -e .`.
 - Configuration is managed using [OmegaConf](https://omegaconf.readthedocs.io/) and [Hydra](https://hydra.cc/).
 
 ---
@@ -72,3 +93,4 @@ To customize the scene, output, or ROS settings, modify `config/habitat_data_col
 ## 📜 License
 
 MIT License
+
