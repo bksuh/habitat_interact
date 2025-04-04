@@ -44,7 +44,8 @@ conda activate habitat_data_collector
 
 ### 3. Build and install Habitat Sim & Lab
 
-This step will take some time as it compiles Habitat-Sim from source.
+> This step will take some time as it compiles Habitat-Sim from source.
+> Habitat can not be installed by conda in Python 3.10 env. We have to build it from source.
 
 ```bash
 bash scripts/install_habitat.sh
