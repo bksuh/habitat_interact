@@ -7,7 +7,7 @@
 ## 📝 TODO
 
 - [ ] **Write documentation for configuration and dataset format**
-  - [ ] Explain the structure and usage of `config/habitat_data_collector.yaml`
+  - [x] Explain the structure and usage of `config/habitat_data_collector.yaml`
   - [ ] Describe expected dataset directory structure (scene, object assets, etc.)
 
 - [ ] **Write usage guide**
@@ -53,6 +53,19 @@ bash scripts/install_habitat.sh
 
 ---
 
+## 📦 Dataset Setup
+
+*To be documented.* This section will describe how to prepare and organize the datasets required to run the simulator, including supported formats and directory structures.
+
+---
+
+## ⚙️ Configuration Guide
+
+For a detailed explanation of configuration options and structure, please refer to the [Configuration Reference](documents/config_reference/config_reference.md).
+
+
+---
+
 ## 🚀 Run the Collector
 
 Run the main simulation from the root directory:
@@ -61,7 +74,7 @@ Run the main simulation from the root directory:
 python -m habitat_data_collector.main
 ```
 
-By default, it uses the configuration file at: `config/habitat_data_collector.yaml`
+By default, it uses the configuration file at: `config/habitat_data_collector.yaml`, following [Config Reference](documents/config_reference/config_reference.md) for config information.
 
 
 
@@ -78,7 +91,8 @@ If you want to receive and send ROS2 topic outputs or record ROS2 bags:
 source /opt/ros/humble/setup.bash  # or source /opt/ros/humble/setup.zsh
 ```
 
-Once sourced, the simulator will publish data to ROS2 topics and allow you to record them by open ros recording config in `config/habitat_data_collector.yaml`
+Once sourced, the simulator will publish data to ROS2 topics, which can be recorded by enabling the ROS recording configuration in `config/habitat_data_collector.yaml`. Detailed information about topic configuration and ROS2-to-ROS1 bridging can be found in the [ROS Integration Documentation](documents/ros.md).
+
 
 
 ---
