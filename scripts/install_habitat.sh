@@ -18,7 +18,7 @@ pip install -e .
 cd ../habitat-lab
 
 echo "[2/3] Installing habitat-lab (editable mode)"
-pip install -e .
+pip install -e habitat-lab
 
 # Navigate back to project root
 cd ../..
