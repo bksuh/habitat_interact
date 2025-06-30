@@ -3,8 +3,8 @@ defaults:
 
 # Scene Output Settings
 dataset_name: hm3d
-output_path: /home/eku/workspace/hiemap/data
-scene_name: 00829-QaLdnwvtxbs
+output_path: /home/bksuh/habitat-data-collector/results # 우리가 원하는 output path
+scene_name: 00800-TEEsavR23oF
 
 # Habitat Setting
 # temp
@@ -17,8 +17,8 @@ load_from_config: false
 scene_config: /home/eku/workspace/dataset/HM3D_collect/00829-QaLdnwvtxbs/dynamic_scene_config/0117.json
 
 # HM3D
-scene_path: /home/eku/workspace/dataset/HM3D/val/00829-QaLdnwvtxbs/QaLdnwvtxbs.basis.glb
-scene_dataset_config: /home/eku/workspace/dataset/HM3D/val/hm3d_annotated_basis.scene_dataset_config.json
+scene_path: /home/bksuh/Desktop/data/versioned_data/hm3d-0.2/hm3d/minival/00800-TEEsavR23oF/TEEsavR23oF.basis.glb
+scene_dataset_config: /home/bksuh/Desktop/data/versioned_data/hm3d-0.2/hm3d/hm3d_annotated_basis.scene_dataset_config.json
 
 # MP3D
 # scene_path: /home/eku/workspace/habitat-sim/data/mp3d_example/17DRP5sb8fy/17DRP5sb8fy.glb
@@ -39,16 +39,16 @@ data_cfg:
   depth: true
   semantic: true
   resolution:
-    w: 1200
-    h: 680
-  camera_height: 1.5
+    w: 640
+    h: 480
+  camera_height: 0.88
 
 # Agent Movement
 movement_cfg:
-  move_forward: 0.4
-  move_backward: 0.4
-  turn_left: 3
-  turn_right: 3
+  move_forward: 0.25
+  move_backward: 0.25
+  turn_left: 30
+  turn_right: 30
   look_up: 3
   look_down: 3
 
@@ -72,9 +72,9 @@ show_placable_categories: False
 frame_rate: 30.0
 
 # Publish ROS2 topics
-use_ros: True
+use_ros: False
 # The recording can also record the rosbag along with the rgbd raw data
-record_rosbag: True
+record_rosbag: False
 
 # PLACEHOLDER, for mapping semantic_id to object handle
 # Do not Delete this holder
