@@ -11,14 +11,14 @@ from habitat.utils.visualizations.maps import MAP_TARGET_POINT_INDICATOR
 from habitat.utils.visualizations.utils import overlay_text_to_image
 from habitat_baselines.common.tensor_dict import TensorDict
 
-from vlfm.utils.geometry_utils import transform_points
-from vlfm.utils.img_utils import (
+from habitat_data_collector.util.geometry_utils import transform_points
+from habitat_data_collector.util.img_utils import (
     reorient_rescale_map,
     resize_image,
     resize_images,
     rotate_image,
 )
-from vlfm.utils.visualization import add_text_to_image, pad_images
+from habitat_data_collector.util.visualization import add_text_to_image, pad_images
 
 
 class HabitatVis:

@@ -7,15 +7,16 @@ import habitat_sim
 from omegaconf import DictConfig
 from .utils.habitat_utils import *
 from datetime import datetime
-from .mapping.obstacle_map import ObstacleMap
-from .utils.geometry_utils import xyz_yaw_to_tf_matrix, extract_yaw
-from .utils.general_utils import habitat_to_xyz, xyz_to_habitat
-from .utils.gps_compass import HeadingSensor, EpisodicCompassSensor, EpisodicGPSSensor
-from depth_camera_filtering import filter_depth
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 import cv2
 import open3d as o3d
+
+from habitat_data_collector.utils.gps_compass import HeadingSensor, EpisodicCompassSensor, EpisodicGPSSensor
+from habitat_data_collector.mapping.object_point_cloud_map import ObjectPointCloudMap
+from habitat_data_collector.mapping.obstacle_map import ObstacleMap
+from habitat_data_collector.obs_transformers.utils import image_resize
+from habitat_data_collector.util.geometry_utils import get_fov, rho_theta, xyz_yaw_to_tf_matrix
 
 
 def save_rgb_depth(save_dir, rgb_img, depth_img):
@@ -45,39 +46,6 @@ def save_depth_visual(depth_img, save_path):
     depth_img_norm = (depth_img - depth_img.min()) / (depth_img.max() - depth_img.min() + 1e-6)
     depth_img_8bit = (depth_img_norm * 255).astype(np.uint8)
     cv2.imwrite(save_path, depth_img_8bit)
-
-def rotate_vector_by_quaternion(v, q):
-    # q = [x, y, z, w]
-    qvec = np.array(q[:3])
-    uv = np.cross(qvec, v)
-    uuv = np.cross(qvec, uv)
-    return v + 2 * (q[3] * uv + uuv)
-
-def custom_yaw_from_quaternion(q):
-    # 너의 좌표계 기준 forward는 +Z 방향
-    forward_init = np.array([0, 0, 1])
-    
-    # 쿼터니언으로 회전된 forward 벡터 계산
-    rotated = rotate_vector_by_quaternion(forward_init, q)
-    
-    # XZ 평면상에서의 회전각도 (너의 yaw)
-    x = rotated[0]  # 너의 좌표계에서 X축
-    z = rotated[2]  # 너의 좌표계에서 Z축
-    yaw = np.arctan2(x, z)  # 반시계 방향 기준 (왼쪽이 +)
-    return yaw
-
-# 프레임마다 수행되는 루프 내부 예시
-def append_pointcloud(global_pcd, new_points_np, color_rgb):
-    new_pcd = o3d.geometry.PointCloud()
-    new_pcd.points = o3d.utility.Vector3dVector(new_points_np)
-    color_array = np.tile(color_rgb, (new_points_np.shape[0], 1))
-    new_pcd.colors = o3d.utility.Vector3dVector(color_array)
-
-    global_pcd += new_pcd  # open3d.geometry.PointCloud supports `+=` operator
-
-global_camera_pcd = o3d.geometry.PointCloud()
-global_episode_pcd = o3d.geometry.PointCloud()
-global_obstacle_pcd = o3d.geometry.PointCloud()
 
 @hydra.main(version_base=None,
             config_path=str(Path(__file__).parent.parent / "config"),
@@ -126,28 +94,6 @@ def main(cfg: DictConfig) -> None:
     print(f"Initial poistion {epi_start_position} with rotation {epi_start_rotation}")
     print('===============================================================================================================')
 
-    _min_obstacle_height: float = 0.15
-    _max_obstacle_height: float = 0.88
-    _obstacle_map_area_threshold: float = 1.5
-    _hole_area_thresh: int = 100000
-    _agent_radius: float = 0.15
-    _obstacle_map = ObstacleMap(
-        min_height=_min_obstacle_height,
-        max_height=_max_obstacle_height,
-        area_threshold=_obstacle_map_area_threshold,
-        agent_radius=_agent_radius,
-        hole_area_threshold=_hole_area_thresh,
-    )
-    image_width = cfg.data_cfg.resolution['w']
-    image_height = cfg.data_cfg.resolution['h']
-    camera_fov = 79
-    camera_fov_rad = np.deg2rad(camera_fov)
-    _camera_fov = camera_fov_rad
-    # _fx = image_width / (2 * np.tan(camera_fov_rad / 2))
-    # _fy = image_height / (2 * np.tan(camera_fov_rad / 2))
-    fx, fy, cx, cy, width, height = get_camera_intrinsics(sim, "color_sensor")
-    _fx = fx
-    _fy = fy
     target_fps = cfg.frame_rate
     frame_interval = 1 / target_fps
 
@@ -157,10 +103,24 @@ def main(cfg: DictConfig) -> None:
     all_actions = []
 
     last_time = time.time()
-    from collections import deque
-    previous_location = deque()
-    trajectory = []
-    idx = 1
+    # =================================== VLFM 내용 추가하는 부분 ============================================================
+    object_map_erosion_size = 5
+    min_obstacle_height = 0.61
+    max_obstacle_height = 0.88
+    obstacle_map_area_threshold = 1.5
+    agent_radius = 0.18
+    hole_area_thresh = 100000
+    __object_map: ObjectPointCloudMap = ObjectPointCloudMap(erosion_size=object_map_erosion_size)
+    _obstacle_map = ObstacleMap(min_height=min_obstacle_height,max_height=max_obstacle_height,area_thresh=obstacle_map_area_threshold,agent_radius=agent_radius,hole_area_thresh=hole_area_thresh,)
+    min_depth = 0.5
+    max_depth = 5.0
+    camera_fov = 79
+    camera_fov_rad = np.deg2rad(camera_fov)
+    _camera_fov = camera_fov_rad
+    image_width = 640
+    _fx = _fy = image_width / (2 * np.tan(camera_fov_rad / 2))
+
+    _observation_cache = {}
     while True:
 
         # control the frame rate
@@ -199,16 +159,28 @@ def main(cfg: DictConfig) -> None:
             action_time = time.time()
 
             sim.step(action)
+
             current_state = sim.get_agent(0).get_state()
 
             camera_yaw = EpisodicCompassSensor(epi_start_rotation, current_state.rotation)
             x, y = EpisodicGPSSensor(epi_start_position, epi_start_rotation, current_state.position, 2)
+            print(f"이전 위치 {epi_start_position}, 현재위치 {current_state.position}")
             camera_yaw = camera_yaw[0].astype(np.float32)
-            camera_pos = np.array([x, -y, cfg.data_cfg.camera_height])
+            camera_position = np.array([x, -y, cfg.data_cfg.camera_height])
+            robot_xy = camera_position[:2]
 
+            tf_camera_to_episodic = xyz_yaw_to_tf_matrix(camera_position, camera_yaw)
 
             depth = obs["depth_sensor"]
             rgb = obs["color_sensor"]
+            _obstacle_map.update_map(depth, tf_camera_to_episodic, min_depth, max_depth, fx=_fx, fy=_fy, topdown_fov=_camera_fov)
+            result = _obstacle_map.visualize()
+            
+            cv2.imshow("Map Visualization", result)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
+
     
 
     for action in all_actions:
